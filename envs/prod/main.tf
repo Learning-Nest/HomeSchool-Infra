@@ -158,6 +158,13 @@ module "container_apps" {
   cors_origins               = join(",", concat(["https://${module.static_web_apps.default_hostnames["admin"]}", "https://${module.static_web_apps.default_hostnames["site"]}"], var.extra_cors_origins))
   otp_provider               = var.otp_provider
   otp_webhook_url            = var.otp_webhook_url
+  email_provider             = var.email_provider
+  smtp_host                  = var.smtp_host
+  smtp_port                  = var.smtp_port
+  smtp_security              = var.smtp_security
+  smtp_username              = var.smtp_username
+  email_from                 = var.email_from
+  email_brand                = var.email_brand
   declaration_notice_version = var.declaration_notice_version
   min_app_version            = var.min_app_version
   seed_publish               = var.seed_publish

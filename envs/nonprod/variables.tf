@@ -330,6 +330,68 @@ variable "otp_static_test_code" {
   default     = ""
 }
 
+variable "email_provider" {
+  description = "console (dev/nonprod: emails are written to the log, nothing is sent) or smtp (real email; prod)."
+  type        = string
+  default     = "console"
+
+  validation {
+    condition     = contains(["console", "smtp"], var.email_provider) && (var.environment != "prod" || var.email_provider == "smtp")
+    error_message = "email_provider must be console or smtp, and must be smtp in prod (the API refuses to start otherwise)."
+  }
+}
+
+variable "smtp_host" {
+  description = "SMTP server host, for example smtp.gmail.com. Required when email_provider is smtp. The password is NOT set here: overwrite the smtp-password secret in Key Vault."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.email_provider != "smtp" || length(trimspace(var.smtp_host)) > 0
+    error_message = "smtp_host must be set when email_provider is smtp."
+  }
+}
+
+variable "smtp_port" {
+  description = "587 with starttls, or 465 with ssl."
+  type        = number
+  default     = 587
+}
+
+variable "smtp_security" {
+  description = "starttls, ssl or none."
+  type        = string
+  default     = "starttls"
+
+  validation {
+    condition     = contains(["starttls", "ssl", "none"], var.smtp_security)
+    error_message = "smtp_security must be starttls, ssl or none."
+  }
+}
+
+variable "smtp_username" {
+  description = "Mail account to log in as (the full address)."
+  type        = string
+  default     = ""
+}
+
+variable "email_from" {
+  description = "Sender shown on emails, for example: LearnNest <verification@example.org>. Required when email_provider is smtp."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = var.email_provider != "smtp" || length(trimspace(var.email_from)) > 0
+    error_message = "email_from must be set when email_provider is smtp."
+  }
+}
+
+variable "email_brand" {
+  description = "App name used in email subjects and bodies."
+  type        = string
+  default     = "LearnNest"
+}
+
 variable "declaration_notice_version" {
   description = "DECLARATION_NOTICE_VERSION."
   type        = string

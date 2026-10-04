@@ -29,3 +29,7 @@ otp_static_test_code = "482915" # every OTP is this fixed code while we finish t
 seed_publish = true
 
 static_web_app_sku = "Free"
+
+# Email: console = nothing is sent, the message is written to the log (nonprod must not email real addresses until the
+# smtp-password secret has been set). Switch to the same smtp block as dev.tfvars when you want real email here.
+email_provider = "console"

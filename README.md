@@ -134,6 +134,13 @@ Run this once per environment (`dev`, `nonprod`, `prod`). All commands are Windo
     first apply overwrite the `otp-webhook-token` secret in Key Vault with the gateway's real token and restart
     the API revision (`az containerapp revision restart`) so it picks it up.
 
+12. **Email (every environment that sends real email):** `envs/<env>/<env>.tfvars` sets `email_provider = "smtp"`,
+    `smtp_host`, `smtp_port`, `smtp_security`, `smtp_username` and `email_from` (the `dev` and `prod` files ship with
+    the Gmail / Google Workspace values). After the first apply, overwrite the `smtp-password` secret in Key Vault
+    with the mail account's app password (Google account -> Security -> App passwords; needs 2-Step Verification) and
+    restart the API revision. `nonprod` ships with `email_provider = "console"`: nothing is sent, the message is only
+    written to the log, until you switch it to the same `smtp` block.
+
 ## The placeholder-image + `lifecycle.ignore_changes` pattern
 
 The API Container App and the release Job both default `api_image` to a public placeholder
@@ -162,10 +169,10 @@ get the environment's real `min_replicas`.
 ## Secrets
 
 No secret value is ever passed to Container Apps as a plain string. `modules/keyvault` generates
-`jwt-secret` (64 random chars), `db-admin-password` and `db-app-password` (32 random chars each), plus an
-`otp-webhook-token` placeholder that an operator overwrites by hand (Terraform's `lifecycle.ignore_changes` on
+`jwt-secret` (64 random chars), `db-admin-password` and `db-app-password` (32 random chars each), plus
+`otp-webhook-token` and `smtp-password` placeholders that an operator overwrites by hand (Terraform's `lifecycle.ignore_changes` on
 that secret's `value` means it is never put back). `modules/container_apps` wires `DB_PASSWORD`, `JWT_SECRET`,
-`OTP_WEBHOOK_TOKEN` (API) and `DB_PASSWORD`/`APP_DB_PASSWORD`/`JWT_SECRET` (release job) as Container Apps
+`OTP_WEBHOOK_TOKEN` and `SMTP_PASSWORD` (API) and `DB_PASSWORD`/`APP_DB_PASSWORD`/`JWT_SECRET`/`SMTP_PASSWORD` (release job) as Container Apps
 `secret { key_vault_secret_id = ... }` references resolved by the platform at revision start - never a literal
 `value`. After rotating a secret in Key Vault, restart the revision (`az containerapp revision restart`) to pick
 up the new version. `tools/check-consistency.py` checks this wiring mechanically (see below).

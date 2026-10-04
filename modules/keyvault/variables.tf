@@ -70,7 +70,7 @@ variable "network_acls_ip_rules" {
 }
 
 variable "secret_officer_principal_ids" {
-  description = "Extra Entra object IDs (people) that get Key Vault Secrets Officer, for example the operator who overwrites otp-webhook-token. The identity running Terraform always gets it."
+  description = "Extra Entra object IDs (people) that get Key Vault Secrets Officer, for example the operator who overwrites otp-webhook-token or smtp-password. The identity running Terraform always gets it."
   type        = list(string)
   default     = []
 }
@@ -83,6 +83,12 @@ variable "prevent_destroy" {
 
 variable "otp_webhook_token_placeholder" {
   description = "Initial value of the otp-webhook-token secret. The operator overwrites it in Key Vault (Terraform then ignores the value)."
+  type        = string
+  default     = "REPLACE-ME-overwrite-in-key-vault"
+}
+
+variable "smtp_password_placeholder" {
+  description = "Initial value of the smtp-password secret. The operator overwrites it in Key Vault with the mail account's app password (Terraform then ignores the value)."
   type        = string
   default     = "REPLACE-ME-overwrite-in-key-vault"
 }

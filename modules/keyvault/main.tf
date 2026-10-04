@@ -5,6 +5,7 @@
 #   db-admin-password   random, used by the database server and by the release job only
 #   db-app-password     random, the password of the least-privilege role the API connects as
 #   otp-webhook-token   placeholder - the operator overwrites it; Terraform never touches the value again
+#   smtp-password       placeholder - the operator overwrites it with the mail account's app password
 #
 # The random values are stored in Terraform state as well as in Key Vault. Treat the state as sensitive (see README):
 # the state storage account must be locked down (Entra-only access, no public blob access, restricted RBAC).
@@ -144,6 +145,21 @@ resource "azurerm_key_vault_secret" "db_app_password" {
 resource "azurerm_key_vault_secret" "otp_webhook_token" {
   name         = "otp-webhook-token"
   value        = var.otp_webhook_token_placeholder
+  key_vault_id = local.key_vault_id
+  content_type = "text/plain"
+  tags         = var.tags
+
+  depends_on = [time_sleep.rbac_propagation]
+
+  lifecycle {
+    # The operator overwrites this secret in Key Vault (new version); Terraform must not put the placeholder back.
+    ignore_changes = [value]
+  }
+}
+
+resource "azurerm_key_vault_secret" "smtp_password" {
+  name         = "smtp-password"
+  value        = var.smtp_password_placeholder
   key_vault_id = local.key_vault_id
   content_type = "text/plain"
   tags         = var.tags

@@ -46,3 +46,12 @@ static_web_app_preview_environments = false
 
 enable_alerts = true
 alert_email   = "ops@REPLACE-ME.invalid" # CHANGE ME
+
+# Email (forgot-password, "Email me a code"): Gmail SMTP with an app password. No password in this file: after the first
+# apply, overwrite the smtp-password secret in Key Vault with the account's app password, then restart the API revision.
+email_provider = "smtp"
+smtp_host      = "smtp.gmail.com"
+smtp_port      = 587
+smtp_security  = "starttls"
+smtp_username  = "verification@learnnests.org"
+email_from     = "LearnNest <verification@learnnests.org>"

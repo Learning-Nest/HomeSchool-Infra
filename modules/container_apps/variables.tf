@@ -40,12 +40,12 @@ variable "registry_login_server" {
 }
 
 variable "key_vault_secret_ids" {
-  description = "Version-less Key Vault secret IDs keyed by secret name: jwt-secret, db-admin-password, db-app-password, otp-webhook-token."
+  description = "Version-less Key Vault secret IDs keyed by secret name: jwt-secret, db-admin-password, db-app-password, otp-webhook-token, smtp-password."
   type        = map(string)
 
   validation {
-    condition     = alltrue([for k in ["jwt-secret", "db-admin-password", "db-app-password", "otp-webhook-token"] : contains(keys(var.key_vault_secret_ids), k)])
-    error_message = "key_vault_secret_ids must contain jwt-secret, db-admin-password, db-app-password and otp-webhook-token."
+    condition     = alltrue([for k in ["jwt-secret", "db-admin-password", "db-app-password", "otp-webhook-token", "smtp-password"] : contains(keys(var.key_vault_secret_ids), k)])
+    error_message = "key_vault_secret_ids must contain jwt-secret, db-admin-password, db-app-password, otp-webhook-token and smtp-password."
   }
 }
 
@@ -210,6 +210,58 @@ variable "otp_static_test_code" {
   description = "TESTING ONLY: forces every generated OTP to this fixed value instead of a random one. Must be empty in prod (the API refuses to start otherwise)."
   type        = string
   default     = ""
+}
+
+variable "email_provider" {
+  description = "EMAIL_PROVIDER: console (the message is written to the log; dev/nonprod only) or smtp (required in prod)."
+  type        = string
+  default     = "console"
+
+  validation {
+    condition     = contains(["console", "smtp"], var.email_provider)
+    error_message = "email_provider must be console or smtp."
+  }
+}
+
+variable "smtp_host" {
+  description = "SMTP_HOST, for example smtp.gmail.com. Required when email_provider is smtp."
+  type        = string
+  default     = ""
+}
+
+variable "smtp_port" {
+  description = "SMTP_PORT: 587 with starttls, or 465 with ssl."
+  type        = number
+  default     = 587
+}
+
+variable "smtp_security" {
+  description = "SMTP_SECURITY: starttls, ssl or none."
+  type        = string
+  default     = "starttls"
+
+  validation {
+    condition     = contains(["starttls", "ssl", "none"], var.smtp_security)
+    error_message = "smtp_security must be starttls, ssl or none."
+  }
+}
+
+variable "smtp_username" {
+  description = "SMTP_USERNAME: the mail account to log in as. The password is the smtp-password Key Vault secret."
+  type        = string
+  default     = ""
+}
+
+variable "email_from" {
+  description = "EMAIL_FROM, for example: LearnNest <verification@example.org>. Required when email_provider is smtp."
+  type        = string
+  default     = ""
+}
+
+variable "email_brand" {
+  description = "EMAIL_BRAND: the app name used in email subjects and bodies."
+  type        = string
+  default     = "LearnNest"
 }
 
 variable "declaration_notice_version" {

@@ -67,7 +67,7 @@ ENV_VAR_SETTINGS_EXEMPTIONS = {
     "SEED_PUBLISH": "release job only; app/cli.py release branch reads it via os.getenv, not Settings",
 }
 
-SECRET_ENV_VARS = {"DB_PASSWORD", "JWT_SECRET", "OTP_WEBHOOK_TOKEN", "APP_DB_PASSWORD"}
+SECRET_ENV_VARS = {"DB_PASSWORD", "JWT_SECRET", "OTP_WEBHOOK_TOKEN", "APP_DB_PASSWORD", "SMTP_PASSWORD"}
 
 EXPECTED_GITHUB_ENV_VARS = {"ACR_NAME", "CONTAINER_APP_NAME", "RELEASE_JOB_NAME", "AZURE_RESOURCE_GROUP"}
 
@@ -482,6 +482,14 @@ def check_prod_validator(backend_dir: Path | None) -> None:
     else:
         ok("prod-guard", "otp_provider = webhook with a real https otp_webhook_url")
 
+    email_provider = tfvars.get("email_provider", "").strip('"')
+    if email_provider != "smtp":
+        error("prod-guard", f'envs/prod/prod.tfvars email_provider = "{email_provider}", must be "smtp" in prod')
+    elif not tfvars.get("smtp_host", "").strip('"') or not tfvars.get("email_from", "").strip('"'):
+        error("prod-guard", "envs/prod/prod.tfvars needs smtp_host and email_from when email_provider = smtp")
+    else:
+        ok("prod-guard", "email_provider = smtp with smtp_host and email_from set")
+
     alert_email = tfvars.get("alert_email", "").strip('"')
     if tfvars.get("enable_alerts", "").strip() == "true":
         if re.search(r"(?i)replace-me|\.invalid$", alert_email):
@@ -501,7 +509,8 @@ def check_prod_validator(backend_dir: Path | None) -> None:
                 "CORS_ORIGINS must list explicit origins",
                 "DB_SSLMODE must be require or stronger",
                 "EXPOSE_DEV_OTP must be false",
-                "OTP_PROVIDER must be webhook in prod",
+                "OTP_PROVIDER must be webhook or msg91 in prod",
+                "EMAIL_PROVIDER must be smtp in prod",
                 "OTP_WEBHOOK_URL must be an https URL",
             ]
             missing_snippets = [s for s in expected_snippets if s not in guard_text]

@@ -32,6 +32,13 @@ locals {
     OTP_PROVIDER               = var.otp_provider
     OTP_WEBHOOK_URL            = var.otp_webhook_url
     OTP_STATIC_TEST_CODE       = var.otp_static_test_code
+    EMAIL_PROVIDER             = var.email_provider
+    SMTP_HOST                  = var.smtp_host
+    SMTP_PORT                  = tostring(var.smtp_port)
+    SMTP_SECURITY              = var.smtp_security
+    SMTP_USERNAME              = var.smtp_username
+    EMAIL_FROM                 = var.email_from
+    EMAIL_BRAND                = var.email_brand
     DECLARATION_NOTICE_VERSION = var.declaration_notice_version
     MIN_APP_VERSION            = var.min_app_version
     # .env.dev sets EXPOSE_DEV_OTP=true for laptops; in Azure it is always off (the API refuses it in nonprod/prod).
@@ -49,6 +56,7 @@ locals {
     DB_PASSWORD       = "db-app-password"
     JWT_SECRET        = "jwt-secret"
     OTP_WEBHOOK_TOKEN = "otp-webhook-token"
+    SMTP_PASSWORD     = "smtp-password"
   }
 
   # The release job connects as the ADMIN login (migrations, role creation) and hands the app password to
@@ -64,6 +72,8 @@ locals {
     DB_PASSWORD     = "db-admin-password"
     APP_DB_PASSWORD = "db-app-password"
     JWT_SECRET      = "jwt-secret"
+    # The release job builds Settings too, and Settings insists on a password whenever SMTP_USERNAME is set.
+    SMTP_PASSWORD = "smtp-password"
   }
 
   api_secrets = { for name in distinct(values(local.api_secret_env)) : name => var.key_vault_secret_ids[name] }

@@ -20,6 +20,7 @@ output "secret_ids" {
     "db-admin-password" = azurerm_key_vault_secret.db_admin_password.versionless_id
     "db-app-password"   = azurerm_key_vault_secret.db_app_password.versionless_id
     "otp-webhook-token" = azurerm_key_vault_secret.otp_webhook_token.versionless_id
+    "smtp-password"     = azurerm_key_vault_secret.smtp_password.versionless_id
   }
 }
 
