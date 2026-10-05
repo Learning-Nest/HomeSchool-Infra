@@ -324,6 +324,47 @@ variable "otp_webhook_url" {
   }
 }
 
+# ---- optional jump VM (database access from a laptop) ------------------------------------------------------------
+
+variable "jump_vm_enabled" {
+  description = "Create a small SSH jump VM in the VNet so DBeaver can reach the private PostgreSQL server through an SSH tunnel. Not allowed in prod."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = var.environment != "prod" || !var.jump_vm_enabled
+    error_message = "jump_vm_enabled must stay false in prod (do not put a public SSH endpoint next to the production database)."
+  }
+}
+
+variable "jump_vm_allowed_ssh_cidrs" {
+  description = "Public IP ranges allowed to SSH to the jump VM, for example [\"203.0.113.7/32\"] (your own address). Required when jump_vm_enabled."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = !var.jump_vm_enabled || (length(var.jump_vm_allowed_ssh_cidrs) > 0 && !contains(var.jump_vm_allowed_ssh_cidrs, "0.0.0.0/0"))
+    error_message = "Set jump_vm_allowed_ssh_cidrs to your own address range (never 0.0.0.0/0) when jump_vm_enabled is true."
+  }
+}
+
+variable "jump_vm_ssh_public_key" {
+  description = "Public half of your SSH key (ssh-rsa ... or ssh-ed25519 ...). Not a secret. Required when jump_vm_enabled."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = !var.jump_vm_enabled || can(regex("^ssh-(rsa|ed25519) ", var.jump_vm_ssh_public_key))
+    error_message = "Set jump_vm_ssh_public_key to an OpenSSH public key (starting ssh-rsa or ssh-ed25519) when jump_vm_enabled is true."
+  }
+}
+
+variable "jump_vm_size" {
+  description = "VM size of the jump VM."
+  type        = string
+  default     = "Standard_B1s"
+}
+
 variable "email_provider" {
   description = "console (dev/nonprod: emails are written to the log, nothing is sent) or smtp (real email; prod)."
   type        = string

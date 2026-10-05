@@ -42,3 +42,11 @@ smtp_port      = 587
 smtp_security  = "starttls"
 smtp_username  = "verification@learnnests.org"
 email_from     = "LearnNest <verification@learnnests.org>"
+
+# Database access from your PC through DBeaver's SSH tunnel (see README, "Reaching the database from your PC").
+# To switch it on: set jump_vm_enabled = true and fill in the two lines below, then terraform apply.
+#   jump_vm_ssh_public_key   : the contents of your PUBLIC key file (~/.ssh/id_rsa.pub). Not a secret.
+#   jump_vm_allowed_ssh_cidrs: your own public IP as x.x.x.x/32 (find it at https://api.ipify.org). Re-apply if it changes.
+jump_vm_enabled = false
+# jump_vm_ssh_public_key    = "ssh-rsa AAAA... you@laptop"
+# jump_vm_allowed_ssh_cidrs = ["203.0.113.7/32"]

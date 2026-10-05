@@ -105,6 +105,23 @@ module "postgres" {
   depends_on = [module.network]
 }
 
+# Optional jump VM for reaching the private database from a laptop through DBeaver's SSH tunnel (README: "Reaching the
+# database from your PC"). Off unless jump_vm_enabled = true.
+module "jump_vm" {
+  count  = var.jump_vm_enabled ? 1 : 0
+  source = "../../modules/jump_vm"
+
+  name_prefix          = local.prefix
+  resource_group_name  = data.azurerm_resource_group.this.name
+  location             = var.location
+  virtual_network_name = module.network.vnet_name
+  subnet_cidr          = cidrsubnet(var.vnet_address_space, 8, 2)
+  allowed_ssh_cidrs    = var.jump_vm_allowed_ssh_cidrs
+  ssh_public_key       = var.jump_vm_ssh_public_key
+  size                 = var.jump_vm_size
+  tags                 = local.tags
+}
+
 module "identity" {
   source = "../../modules/identity"
 

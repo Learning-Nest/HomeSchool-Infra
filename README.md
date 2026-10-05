@@ -141,6 +141,48 @@ Run this once per environment (`dev`, `nonprod`, `prod`). All commands are Windo
     restart the API revision. `nonprod` ships with `email_provider = "console"`: nothing is sent, the message is only
     written to the log, until you switch it to the same `smtp` block.
 
+## Reaching the database from your PC (DBeaver)
+
+The Postgres server has no public endpoint: it lives on a private subnet of the environment's VNet. To open it in
+DBeaver from your PC, `dev` and `nonprod` can create a small **jump VM** (Ubuntu, `Standard_B1s`, SSH key only,
+roughly $8-10/month while running, $0 compute while deallocated). DBeaver connects to the VM over SSH and the VM
+forwards the connection to Postgres. It is off by default and refused outright for `prod` (a validation rule).
+
+1. Make a key pair if you do not have one (PowerShell): `ssh-keygen -t rsa -b 4096`. Never share the private key
+   (`id_rsa`); the public key (`id_rsa.pub`) is safe to put in a tfvars file.
+2. Find your public IP: `(Invoke-RestMethod https://api.ipify.org)`.
+3. In `envs/dev/dev.tfvars` set:
+
+   ```hcl
+   jump_vm_enabled           = true
+   jump_vm_ssh_public_key    = "ssh-rsa AAAA... you@laptop"   # contents of id_rsa.pub
+   jump_vm_allowed_ssh_cidrs = ["203.0.113.7/32"]             # your IP, with /32. 0.0.0.0/0 is rejected.
+   ```
+
+   then `terraform apply -var-file=dev.tfvars`. Read the values back with `terraform output`
+   (`jump_vm_public_ip`, `postgres_fqdn`, `postgres_database_name`, `postgres_administrator_login`).
+4. The admin password is the `db-admin-password` secret in Key Vault (read it in the portal or with
+   `az keyvault secret show`).
+5. DBeaver -> New connection -> PostgreSQL:
+   - **Main** tab: Host = `postgres_fqdn`, Port = 5432, Database = `postgres_database_name`, Username =
+     `postgres_administrator_login`, Password = the Key Vault secret.
+   - **SSH** tab: tick *Use SSH Tunnel*, Host = `jump_vm_public_ip`, Port = 22, User = `azureuser`, Authentication =
+     *Public Key*, Private key = your `id_rsa` file.
+   - **Driver properties** (or SSL tab): `sslmode` = `require`. Test the connection.
+
+The VM resolves the server name through the VNet's private DNS zone, which is why the Main tab uses the FQDN and
+not an IP.
+
+Housekeeping:
+
+- Your home IP changes now and then: update `jump_vm_allowed_ssh_cidrs` and re-apply (only the NSG rule changes).
+- Stop paying for compute between sessions: `az vm deallocate -g rg-hs-dev -n <jump_vm_name>`; bring it back with
+  `az vm start ...`. The public IP is static and survives this.
+- Done with it for good: set `jump_vm_enabled = false` and apply; the VM, IP, NIC, NSG and subnet are removed.
+- The first apply needs the `Microsoft.Compute` resource provider registered on the subscription (the provider block
+  does not register providers automatically): `az provider register --namespace Microsoft.Compute`.
+- Use the admin login only for inspection and one-off fixes. The app connects with its own least-privilege role.
+
 ## The placeholder-image + `lifecycle.ignore_changes` pattern
 
 The API Container App and the release Job both default `api_image` to a public placeholder

@@ -53,6 +53,26 @@ output "postgres_fqdn" {
   value       = module.postgres.fqdn
 }
 
+output "postgres_administrator_login" {
+  description = "PostgreSQL administrator login (password: Key Vault secret db-admin-password)."
+  value       = module.postgres.administrator_login
+}
+
+output "postgres_database_name" {
+  description = "Application database name."
+  value       = module.postgres.database_name
+}
+
+output "jump_vm_public_ip" {
+  description = "Public IP of the jump VM for DBeaver's SSH tab (null when jump_vm_enabled = false)."
+  value       = try(module.jump_vm[0].public_ip, null)
+}
+
+output "jump_vm_name" {
+  description = "Jump VM name, for az vm start / deallocate (null when jump_vm_enabled = false)."
+  value       = try(module.jump_vm[0].vm_name, null)
+}
+
 output "site_hostname" {
   description = "Default hostname of the public site Static Web App."
   value       = module.static_web_apps.default_hostnames["site"]
