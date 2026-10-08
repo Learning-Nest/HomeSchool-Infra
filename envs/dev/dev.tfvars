@@ -30,7 +30,7 @@ otp_static_test_code = "482915" # every OTP is this fixed code while we finish t
 seed_publish = true
 
 # Local web development against the Azure dev API (dev only).
-extra_cors_origins = ["http://localhost:5173", "http://localhost:4173"]
+extra_cors_origins = ["http://localhost:5173", "http://localhost:4173", "https://admin.learnnests.org", "https://www.learnnests.org"]
 
 static_web_app_sku = "Free"
 
