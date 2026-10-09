@@ -104,6 +104,16 @@ output "application_insights_connection_string" {
   sensitive   = true
 }
 
+output "storage_account_name" {
+  description = "Storage account that holds the activity pictures."
+  value       = module.storage.name
+}
+
+output "storage_blob_endpoint" {
+  description = "Blob endpoint (the API's STORAGE_ACCOUNT_URL)."
+  value       = module.storage.blob_endpoint
+}
+
 output "github_environment_variables" {
   description = "Values to set as GitHub environment variables in the backend-api repository for this environment."
   value = {

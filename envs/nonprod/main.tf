@@ -5,6 +5,7 @@
 #   network, monitoring, registry, keyvault
 #   postgres        -> network, keyvault (admin password)
 #   identity        -> keyvault, registry (role assignments)
+#   storage         -> identity (activity pictures; Blob roles for the API identity)
 #   static_web_apps
 #   container_apps  -> everything above (CORS origins come from static_web_apps)
 #   alerts (prod)   -> container_apps
@@ -144,6 +145,20 @@ module "static_web_apps" {
   tags                         = local.tags
 }
 
+module "storage" {
+  source = "../../modules/storage"
+
+  # st + short name + env + suffix = at most 24 characters (2 + 5 + 7 + 6 = 20).
+  name                 = "st${var.short_name}${var.environment}${var.unique_suffix}"
+  resource_group_name  = data.azurerm_resource_group.this.name
+  location             = var.location
+  replication_type     = var.storage_replication_type
+  soft_delete_days     = var.storage_soft_delete_days
+  cors_allowed_origins = concat(["https://${module.static_web_apps.default_hostnames["admin"]}"], var.extra_cors_origins)
+  api_principal_id     = module.identity.principal_id
+  tags                 = local.tags
+}
+
 module "container_apps" {
   source = "../../modules/container_apps"
 
@@ -155,6 +170,9 @@ module "container_apps" {
   log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
 
   identity_id           = module.identity.id
+  identity_client_id    = module.identity.client_id
+  storage_account_url   = module.storage.blob_endpoint
+  storage_container     = module.storage.container_name
   registry_login_server = module.registry.login_server
   key_vault_secret_ids  = module.keyvault.secret_ids
 
@@ -191,7 +209,7 @@ module "container_apps" {
 
   # The identity module's roles (AcrPull, Key Vault Secrets User) must be usable before the first revision starts;
   # the database must exist before the API points at it.
-  depends_on = [module.identity, module.postgres]
+  depends_on = [module.identity, module.postgres, module.storage]
 }
 
 module "alerts" {

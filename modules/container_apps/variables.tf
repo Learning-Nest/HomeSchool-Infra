@@ -276,6 +276,22 @@ variable "min_app_version" {
   default     = "0.1.0"
 }
 
+variable "storage_account_url" {
+  description = "STORAGE_ACCOUNT_URL: Blob endpoint of the activity-pictures storage account (no trailing slash)."
+  type        = string
+}
+
+variable "storage_container" {
+  description = "STORAGE_CONTAINER: private container for activity pictures."
+  type        = string
+  default     = "activity-images"
+}
+
+variable "identity_client_id" {
+  description = "AZURE_CLIENT_ID: client ID of the user-assigned managed identity the API uses to reach Blob Storage."
+  type        = string
+}
+
 variable "seed_bundle_path" {
   description = "SEED_BUNDLE_PATH for the release job (relative to the image's /srv)."
   type        = string

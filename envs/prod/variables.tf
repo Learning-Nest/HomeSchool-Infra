@@ -459,6 +459,20 @@ variable "seed_publish" {
   type        = bool
 }
 
+# ---- Activity pictures (Blob Storage) ----------------------------------------------------------------------------
+
+variable "storage_replication_type" {
+  description = "Replication of the pictures account: LRS (dev/nonprod) or GRS/ZRS (prod). Pictures can be re-uploaded, so LRS is acceptable everywhere."
+  type        = string
+  default     = "LRS"
+}
+
+variable "storage_soft_delete_days" {
+  description = "Days a deleted picture (or container) stays recoverable."
+  type        = number
+  default     = 7
+}
+
 # ---- Static Web Apps ---------------------------------------------------------------------------------------------
 
 variable "static_web_app_sku" {

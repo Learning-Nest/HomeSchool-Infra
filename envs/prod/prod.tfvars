@@ -41,6 +41,10 @@ seed_publish    = false                                         # review seeded 
 # Custom domains, once they exist (https only, no wildcard):
 # extra_cors_origins = ["https://www.example.in", "https://admin.example.in"]
 
+# Activity pictures (Blob Storage). Geo-redundant in prod; soft delete keeps a removed picture recoverable.
+storage_replication_type = "GRS"
+storage_soft_delete_days = 14
+
 static_web_app_sku                  = "Standard"
 static_web_app_preview_environments = false
 

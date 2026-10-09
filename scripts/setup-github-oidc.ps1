@@ -166,9 +166,9 @@ Set-FederatedCredential -AppId $infra.AppId -Name "$InfraRepo-pull-request" -Sub
 
 Set-RoleAssignment -ObjectId $infra.ServicePrincipalObjectId -Role 'Contributor' -Scope $rgScope
 if ($NarrowRbac) {
-    # Role Based Access Control Administrator, restricted by an ABAC condition to the three roles this repo assigns:
-    # AcrPull, Key Vault Secrets User, Key Vault Secrets Officer. (Not exercised in the authoring environment.)
-    $ids = '7f951dda-4ed3-4680-a7ca-43fe172d538d, 4633458b-17de-408a-b874-0d1eb2a0e6e2, b86a8fe4-44ce-4948-aee5-eccb2d63f9ee'
+    # Role Based Access Control Administrator, restricted by an ABAC condition to the roles this repo assigns:
+    # AcrPull, Key Vault Secrets User, Key Vault Secrets Officer, Storage Blob Data Contributor, Storage Blob Delegator. (Not exercised in the authoring environment.)
+    $ids = '7f951dda-4ed3-4680-a7ca-43fe172d538d, 4633458b-17de-408a-b874-0d1eb2a0e6e2, b86a8fe4-44ce-4948-aee5-eccb2d63f9ee, ba92f5b4-2d11-453d-a403-e96b0029c9fe, db58b8e5-c6ad-4a2a-8342-4190687cbf4a'
     $condition = "((!(ActionMatches{'Microsoft.Authorization/roleAssignments/write'})) OR (@Request[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {$ids})) AND ((!(ActionMatches{'Microsoft.Authorization/roleAssignments/delete'})) OR (@Resource[Microsoft.Authorization/roleAssignments:RoleDefinitionId] ForAnyOfAnyValues:GuidEquals {$ids}))"
     Set-RoleAssignment -ObjectId $infra.ServicePrincipalObjectId -Role 'Role Based Access Control Administrator' -Scope $rgScope -Condition $condition
 }

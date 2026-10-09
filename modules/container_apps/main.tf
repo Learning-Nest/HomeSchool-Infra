@@ -41,6 +41,12 @@ locals {
     EMAIL_BRAND                = var.email_brand
     DECLARATION_NOTICE_VERSION = var.declaration_notice_version
     MIN_APP_VERSION            = var.min_app_version
+    # Activity pictures: private Blob container, reached with the managed identity (no key). AZURE_CLIENT_ID tells the
+    # Azure SDK which of the app's identities to use (it is user-assigned).
+    STORAGE_BACKEND     = "azure"
+    STORAGE_ACCOUNT_URL = var.storage_account_url
+    STORAGE_CONTAINER   = var.storage_container
+    AZURE_CLIENT_ID     = var.identity_client_id
     # .env.dev sets EXPOSE_DEV_OTP=true for laptops; in Azure it is always off (the API refuses it in nonprod/prod).
     EXPOSE_DEV_OTP = "false"
   }

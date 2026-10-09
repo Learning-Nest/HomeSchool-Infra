@@ -13,7 +13,7 @@ environments (`dev`, `nonprod`, `prod`). Deployment of the API *image* is not do
 
 ```
 modules/            One module per concern: network, postgres, keyvault, registry, monitoring, identity,
-                     static_web_apps, container_apps, alerts.
+                     static_web_apps, storage, container_apps, alerts.
 envs/<env>/          dev, nonprod, prod. main.tf/variables.tf/outputs.tf/providers.tf/versions.tf/backend.tf are
                      byte-identical across the three (tools/check-consistency.py enforces it) - only <env>.tfvars
                      and backend.hcl.example differ. This is where you run terraform.
@@ -31,7 +31,8 @@ network, monitoring, registry, keyvault      (independent)
 postgres        -> network (subnet/DNS), keyvault (admin password)
 identity        -> keyvault, registry        (role assignments: Key Vault Secrets User, AcrPull)
 static_web_apps                              (independent; CORS origins for the API come from here)
-container_apps  -> identity, registry, keyvault, postgres, static_web_apps
+storage         -> identity, static_web_apps (activity pictures; Blob roles for the API identity)
+container_apps  -> identity, registry, keyvault, postgres, static_web_apps, storage
 alerts (prod)   -> container_apps
 ```
 
@@ -223,6 +224,17 @@ Terraform state itself contains the generated secrets in clear text (this is nor
 `azurerm_key_vault_secret`). That is exactly why the state storage account from `bootstrap-state.ps1` disables
 shared-key access and grants only Entra RBAC (`Storage Blob Data Contributor`) to a small set of principals -
 treat access to that storage account as equivalent to production secret access.
+
+## Activity pictures (Blob Storage)
+
+`modules/storage` creates one StorageV2 account per environment (`st<short><env><suffix>`) with a **private** container
+`activity-images`, 7-day (prod: 14-day) soft delete and a GET/HEAD CORS rule for the admin console. The API reaches it with
+its managed identity - there is no key or connection string anywhere. The identity gets *Storage Blob Data Contributor*
+(upload/delete/read) and *Storage Blob Delegator* (sign the one-hour download links the app uses). The Container App and the
+release job receive `STORAGE_BACKEND=azure`, `STORAGE_ACCOUNT_URL`, `STORAGE_CONTAINER` and `AZURE_CLIENT_ID`.
+
+If you use `setup-github-oidc.ps1 -NarrowRbac`, re-run it once so the Terraform identity may assign these two roles as well.
+Pictures are re-uploadable content, so `storage_replication_type` is `LRS` outside prod (`GRS` in prod).
 
 ## Cost notes (rough estimate only - do not treat as a quote)
 
